@@ -9,10 +9,12 @@ api_hash = 'bb6ca97823e0a07d86dfcef22746b4b7'
 phone_number = '+917319829261'  
 
 # 🔹 Firebase Setup
-cred = credentials.Certificate("C:/Users/Lenovo/Downloads/serviceAccountKey.json")  
+firebase_creds = json.loads(os.getenv("FIREBASE_CREDENTIALS"))
+cred = credentials.Certificate(firebase_creds)
+
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://radarxtvscores-default-rtdb.firebaseio.com/'  
-})
+    'databaseURL': 'https://radarxtvscores-default-rtdb.firebaseio.com/'
+}) 
 
 # 🔹 Source Channel
 source_channel = 'ALLROUNDERLINE'  
