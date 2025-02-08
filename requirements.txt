@@ -1,4 +1,2 @@
-firebase-admin
 telethon
-fastapi
-uvicorn
+firebase-admin
