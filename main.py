@@ -1,44 +1,48 @@
 import os
-import json  # ✅ Fix: JSON module import kiya
+import json
 import firebase_admin
 from firebase_admin import credentials, db
 from telethon import TelegramClient, events
 
-# ✅ Firebase credentials ko Vercel ENV Variable se load kar
-firebase_creds = json.loads(os.getenv("FIREBASE_CREDENTIALS"))  # 🔥 Fix Applied
-cred = credentials.Certificate(firebase_creds)
+# 🔹 Load Firebase credentials from environment variable
+firebase_json = os.getenv("FIREBASE_JSON")
 
+if not firebase_json:
+    raise ValueError("⚠️ FIREBASE_JSON environment variable is missing!")
+
+# 🔹 Convert JSON string to dictionary
+cred_dict = json.loads(firebase_json)
+
+# 🔹 Initialize Firebase Admin SDK
+cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://radarxtvscores-default-rtdb.firebaseio.com/'
+    "databaseURL": "https://your-project-id.firebaseio.com"
 })
 
-# ✅ Telegram API Details
-api_id = 28320272  
-api_hash = 'bb6ca97823e0a07d86dfcef22746b4b7'  
-phone_number = '+917319829261'  
-source_channel = 'RadarXCricketLine'  
+# 🔹 Telegram API credentials (Replace with your API details)
+API_ID = "your_api_id"
+API_HASH = "your_api_hash"
+BOT_TOKEN = "your_bot_token"
 
-# ✅ Telegram Client
-client = TelegramClient('session_name', api_id, api_hash)
+# 🔹 Initialize Telegram Client
+client = TelegramClient("session", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
-async def main():
-    await client.start(phone_number)  
+# 🔹 Function to handle new messages
+@client.on(events.NewMessage)
+async def handler(event):
+    message = event.message.message  # Get message text
+    sender = await event.get_sender()  # Get sender details
 
-    @client.on(events.NewMessage(chats=source_channel))
-    async def store_message(event):
-        message_text = event.message.text
+    # 🔹 Store in Firebase
+    ref = db.reference("messages")
+    ref.push({
+        "sender_id": sender.id,
+        "sender_name": sender.username,
+        "message": message
+    })
 
-        if message_text:
-            # ✅ Firebase me store karna
-            ref = db.reference('/telegram_messages')
-            ref.push({
-                'text': message_text,
-                'timestamp': event.message.date.timestamp()
-            })
-            print(f"✅ Message Saved: {message_text}")
+    print(f"✅ Message stored: {message}")
 
-    print("🚀 Bot is Running on Vercel...")
-    await client.run_until_disconnected()
-
-with client:
-    client.loop.run_until_complete(main())
+# 🔹 Start the bot
+print("🤖 Bot is running...")
+client.run_until_disconnected()
